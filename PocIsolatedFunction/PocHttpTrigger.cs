@@ -13,7 +13,7 @@ static class PocHttpTrigger
     /// <returns>Returns an HTTP response with more information about the started orchestration instance.</returns>
     [Function(nameof(PocHttpTriggerAsync))]
     public static async Task<HttpResponseData> PocHttpTriggerAsync(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req,
         [DurableClient] DurableClientContext durableClientContext,
         FunctionContext executionContext)
     {
