@@ -32,7 +32,7 @@ static class PocHttpTrigger
     [DurableClient] DurableClientContext durableContext,
     FunctionContext executionContext)
     {
-        var logger = executionContext.GetLogger(nameof(PocHttpTriggerAsync));
+        var logger = executionContext.GetLogger(nameof(PocTimerTriggerAsync));
 
         var instanceId = await durableContext.Client.ScheduleNewOrchestrationInstanceAsync(nameof(PocOrchestration.PocOrchestrationAsync));
 
