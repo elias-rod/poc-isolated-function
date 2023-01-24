@@ -1,0 +1,43 @@
+
+Azure Functions Core Tools
+Core Tools Version:       4.0.4915 Commit hash: N/A  (64-bit)
+Function Runtime Version: 4.14.0.19631
+
+[2023-01-24T15:55:09.986Z] Found Z:\repos\poc-isolated-function\PocIsolatedFunction\PocIsolatedFunction.csproj. Using for user secrets file configuration.
+
+Functions:
+
+        PocEventGridActivityAsync: activityTrigger
+
+        PocOrchestrationAsync: orchestrationTrigger
+
+[2023-01-24T15:55:12.781Z] Azure Functions .NET Worker (PID: 24896) initialized in debug mode. Waiting for debugger to attach...
+        PocTimerTriggerAsync: timerTrigger
+
+For detailed output, run func with --verbose flag.
+[2023-01-24T15:55:12.866Z] Executing 'Functions.PocTimerTriggerAsync' (Reason='Timer fired at 2023-01-24T12:55:12.8351626-03:00', Id=3cb4b047-7f5f-48f1-a8f9-0fe81dd9cb09)
+[2023-01-24T15:55:12.868Z] Trigger Details: UnscheduledInvocationReason: RunOnStartup
+[2023-01-24T15:55:12.982Z] Executing 'Functions.PocEventGridActivityAsync' (Reason='(null)', Id=f7d8481b-f754-4b20-ab96-ea58c01168e7)
+[2023-01-24T15:55:14.045Z] Worker process started and initialized.
+[2023-01-24T15:55:17.619Z] Host lock lease acquired by instance ID '00000000000000000000000061FB55F3'.
+[2023-01-24T15:55:17.628Z] Scheduling new PocOrchestrationAsync orchestration with instance ID '92cbd7549b8c4c03a20bf6b02641199e' and 0 bytes of input data.
+[2023-01-24T15:55:17.785Z] Created new orchestration 92cbd7549b8c4c03a20bf6b02641199e
+[2023-01-24T15:55:17.814Z] Executed 'Functions.PocTimerTriggerAsync' (Succeeded, Id=3cb4b047-7f5f-48f1-a8f9-0fe81dd9cb09, Duration=4969ms)
+[2023-01-24T15:55:18.226Z] Executing 'Functions.PocOrchestrationAsync' (Reason='(null)', Id=5fa94e71-006e-4302-9e98-6b7ba1bbb416)
+[2023-01-24T15:55:18.226Z] Executing 'Functions.PocOrchestrationAsync' (Reason='(null)', Id=cd122168-f6d3-4690-9734-bb1bc614f4d5)
+[2023-01-24T15:55:18.340Z] Executed 'Functions.PocOrchestrationAsync' (Succeeded, Id=5fa94e71-006e-4302-9e98-6b7ba1bbb416, Duration=126ms)
+[2023-01-24T15:55:18.340Z] Executed 'Functions.PocOrchestrationAsync' (Succeeded, Id=cd122168-f6d3-4690-9734-bb1bc614f4d5, Duration=126ms)
+[2023-01-24T15:55:18.369Z] Executing 'Functions.PocEventGridActivityAsync' (Reason='(null)', Id=6ad461e9-01e1-475e-ab43-867c5b144b99)
+[2023-01-24T15:55:18.371Z] Executing 'Functions.PocEventGridActivityAsync' (Reason='(null)', Id=fe3fca39-a5d9-42f3-9a8c-5c3067420544)
+[2023-01-24T15:55:24.899Z] Event published to EventGrid for orchestration 92cbd7549b8c4c03a20bf6b02641199e[2023-01-24T15:55:24.900Z] Executed 'Functions.PocEventGridActivityAsync' (Succeeded, Id=fe3fca39-a5d9-42f3-9a8c-5c3067420544, Duration=6528ms)[2023-01-24T15:55:24.902Z] Event published to EventGrid for orchestration 069674ae11ef412f8bb03eaf5005f240
+[2023-01-24T15:55:24.903Z] Event published to EventGrid for orchestration ed1d5b4340bf41e39243169104b44bf0
+
+
+[2023-01-24T15:55:24.902Z] Executed 'Functions.PocEventGridActivityAsync' (Succeeded, Id=f7d8481b-f754-4b20-ab96-ea58c01168e7, Duration=11926ms)
+[2023-01-24T15:55:24.903Z] Executed 'Functions.PocEventGridActivityAsync' (Succeeded, Id=6ad461e9-01e1-475e-ab43-867c5b144b99, Duration=6534ms)
+[2023-01-24T15:55:32.731Z] Executing 'Functions.PocOrchestrationAsync' (Reason='(null)', Id=0d23a4b2-24bd-4133-a6d4-f907b95f6a07)
+[2023-01-24T15:55:32.731Z] Executing 'Functions.PocOrchestrationAsync' (Reason='(null)', Id=f360fe10-73f9-42b9-b4e1-933c018944d2)
+[2023-01-24T15:55:32.731Z] Executing 'Functions.PocOrchestrationAsync' (Reason='(null)', Id=7bc7dd13-8deb-4d2b-91c0-b6269b2bf751)
+[2023-01-24T15:55:32.753Z] Executed 'Functions.PocOrchestrationAsync' (Succeeded, Id=f360fe10-73f9-42b9-b4e1-933c018944d2, Duration=22ms)
+[2023-01-24T15:55:32.753Z] Executed 'Functions.PocOrchestrationAsync' (Succeeded, Id=7bc7dd13-8deb-4d2b-91c0-b6269b2bf751, Duration=21ms)
+[2023-01-24T15:55:32.753Z] Executed 'Functions.PocOrchestrationAsync' (Succeeded, Id=0d23a4b2-24bd-4133-a6d4-f907b95f6a07, Duration=22ms)
