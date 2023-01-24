@@ -1,4 +1,3 @@
-using Azure.Identity;
 using Azure.Messaging.EventGrid;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Cosmos;
@@ -43,8 +42,7 @@ class PocOrchestration
     [Function(nameof(PocCosmosActivityAsync))]
     public async Task<string> PocCosmosActivityAsync([ActivityTrigger] string instanceId, FunctionContext executionContext)
     {
-        var database = _cosmosClient.GetDatabase(id: "pocif");
-        var container = database.GetContainer(id: "samples");
+        var container = _cosmosClient.GetContainer("pocif", "samples");
         var cosmosDocId = Guid.NewGuid().ToString();
         await container.CreateItemAsync(new PocDocument(cosmosDocId, Random.Shared.Next().ToString()), new PartitionKey(cosmosDocId));
 
