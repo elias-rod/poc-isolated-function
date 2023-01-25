@@ -59,7 +59,7 @@ class PocOrchestration
     public async Task PocServiceBusActivityAsync([ActivityTrigger] string instanceId, FunctionContext executionContext)
     {
         await using var sender = _serviceBusClient.CreateSender(_pocConfig.ServiceBusQueueName);
-        var message = new PocMessage(instanceId, 3);
+        var message = new PocMessage(instanceId, _pocConfig.MessageDelayInSeconds);
         await sender.SendMessageAsync(new ServiceBusMessage(JsonSerializer.Serialize(message)));
 
         var logger = executionContext.GetLogger(nameof(PocServiceBusActivityAsync));
@@ -69,7 +69,8 @@ class PocOrchestration
     [Function(nameof(PocEventGridActivityAsync))]
     public async Task PocEventGridActivityAsync([ActivityTrigger] PocEventGridCommand command, FunctionContext executionContext)
     {
-        var response = await _eventGridPublisherClient.SendEventAsync(new EventGridEvent(nameof(PocEvent), nameof(PocEvent), "1.0", new PocEvent(command.InstanceId, command.PocCosmosDocumentId)));
+        var eventGridEvent = new EventGridEvent(nameof(PocEvent), nameof(PocEvent), "1.0", new PocEvent(command.InstanceId, command.PocCosmosDocumentId));
+        await _eventGridPublisherClient.SendEventAsync(eventGridEvent);
 
         var logger = executionContext.GetLogger(nameof(PocEventGridActivityAsync));
         logger.LogInformation("Event published to EventGrid for orchestration {InstanceId}", command.InstanceId);
