@@ -4,6 +4,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 class PocOrchestration
@@ -11,12 +12,14 @@ class PocOrchestration
     private readonly ServiceBusClient _serviceBusClient;
     private readonly CosmosClient _cosmosClient;
     private readonly EventGridPublisherClient _eventGridPublisherClient;
+    private readonly PocConfig _pocConfig;
 
-    public PocOrchestration(ServiceBusClient serviceBusClient, CosmosClient cosmosClient, EventGridPublisherClient eventGridPublisherClient)
+    public PocOrchestration(ServiceBusClient serviceBusClient, CosmosClient cosmosClient, EventGridPublisherClient eventGridPublisherClient, IOptionsSnapshot<PocConfig> optionsSnapshot)
     {
         _serviceBusClient = serviceBusClient;
         _cosmosClient = cosmosClient;
         _eventGridPublisherClient = eventGridPublisherClient;
+        _pocConfig = optionsSnapshot.Value;
     }
 
     [Function(nameof(PocOrchestrationAsync))]
@@ -42,7 +45,7 @@ class PocOrchestration
     [Function(nameof(PocCosmosActivityAsync))]
     public async Task<string> PocCosmosActivityAsync([ActivityTrigger] string instanceId, FunctionContext executionContext)
     {
-        var container = _cosmosClient.GetContainer("pocif", "samples");
+        var container = _cosmosClient.GetContainer(_pocConfig.CosmosDatabaseId, _pocConfig.CosmosContainerId);
         var cosmosDocId = Guid.NewGuid().ToString();
         await container.CreateItemAsync(new PocDocument(cosmosDocId, Random.Shared.Next().ToString()), new PartitionKey(cosmosDocId));
 
@@ -55,7 +58,7 @@ class PocOrchestration
     [Function(nameof(PocServiceBusActivityAsync))]
     public async Task PocServiceBusActivityAsync([ActivityTrigger] string instanceId, FunctionContext executionContext)
     {
-        await using var sender = _serviceBusClient.CreateSender("sbq-pocif-dev-bs2-1");
+        await using var sender = _serviceBusClient.CreateSender(_pocConfig.ServiceBusQueueName);
         var message = new PocMessage(instanceId, 3);
         await sender.SendMessageAsync(new ServiceBusMessage(JsonSerializer.Serialize(message)));
 
