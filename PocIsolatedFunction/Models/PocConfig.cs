@@ -8,4 +8,5 @@
     public string? CosmosDatabaseId { get; set; }
     public string? CosmosContainerId { get; set; }
     public int MessageDelayInSeconds { get; set; }
+    public string? Prefix { get; set; }
 }

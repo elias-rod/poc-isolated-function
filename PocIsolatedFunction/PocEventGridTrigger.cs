@@ -1,4 +1,3 @@
-using Azure.Identity;
 using Azure.Messaging.EventGrid;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;

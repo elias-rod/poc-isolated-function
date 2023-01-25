@@ -2,8 +2,7 @@
   "profiles": {
     "Function": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7258",
-      "launchBrowser": false
+      "commandLineArgs": "--port 7258"
     }
   }
 }

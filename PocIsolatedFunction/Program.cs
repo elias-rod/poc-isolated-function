@@ -2,10 +2,13 @@ using Azure.Identity;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+IConfigurationRefresher configurationRefresher = null!;
 var defaultAzureCredential = new DefaultAzureCredential();
+
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureAppConfiguration((hostBuilderContext, configurationBuilder) =>
@@ -13,8 +16,16 @@ var host = new HostBuilder()
         var pocConfig = configurationBuilder.Build().Get<PocConfig>();
         configurationBuilder.AddAzureAppConfiguration(azureAppConfigurationOptions =>
         {
-            azureAppConfigurationOptions
-                .Connect(pocConfig!.AppConfigurationEndpoint, defaultAzureCredential);
+            configurationRefresher = azureAppConfigurationOptions
+                .Connect(pocConfig!.AppConfigurationEndpoint, defaultAzureCredential)
+                .Select($"{PocConstant.Prefix}:{PocConstant.AppConfigWildcard}")
+                .TrimKeyPrefix($"{PocConstant.Prefix}:")
+                .ConfigureRefresh(azureAppConfigurationRefreshOptions =>
+                    azureAppConfigurationRefreshOptions
+                        .Register($"{PocConstant.Prefix}:{PocConstant.SentinelKey}", refreshAll: true)
+                        .SetCacheExpiration(TimeSpan.FromDays(1))
+                )
+                .GetRefresher();
         });
     })
     .ConfigureServices((hostBuilderContext, serviceCollection) =>
@@ -32,6 +43,7 @@ var host = new HostBuilder()
             defaultAzureCredential,
             new CosmosClientOptions { SerializerOptions = new CosmosSerializationOptions { PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase } }
         ));
+        serviceCollection.AddSingleton(configurationRefresher);
     })
     .Build();
 
