@@ -15,9 +15,9 @@ class PocEventGridTrigger
     [Function(nameof(PocEventGridTriggerAsync))]
     public async Task PocEventGridTriggerAsync(
         [EventGridTrigger] EventGridEvent eventGridEvent,
-        FunctionContext executionContext)
+        FunctionContext functionContext)
     {
-        var logger = executionContext.GetLogger(nameof(PocEventGridTriggerAsync));
+        var logger = functionContext.GetLogger(nameof(PocEventGridTriggerAsync));
         logger.LogInformation("Received event {EventData}", eventGridEvent.Data);
 
         var pocEvent = eventGridEvent.Data.ToObjectFromJson<PocEvent>();

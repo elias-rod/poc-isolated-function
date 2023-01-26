@@ -4,6 +4,7 @@
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
     "AzureWebJobsServiceBus__fullyQualifiedNamespace": "sb-pocif-dev-bs2-1.servicebus.windows.net",
-    "AppConfigurationEndpoint": "https://appcs-pocif-dev-bs2-1.azconfig.io"
+    "AppConfigurationEndpoint": "https://appcs-pocif-dev-bs2-1.azconfig.io",
+    "ServiceBusQueueName": "sbq-pocif-dev-bs2-1"
   }
 }

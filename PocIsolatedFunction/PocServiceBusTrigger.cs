@@ -5,11 +5,11 @@ class PocServiceBusTrigger
 {
     [Function(nameof(PocServiceBusTriggerAsync))]
     public static async Task PocServiceBusTriggerAsync(
-        [ServiceBusTrigger("sbq-pocif-dev-bs2-1")] PocMessage message,
-        FunctionContext executionContext,
+        [ServiceBusTrigger(PocConstant.ServiceBusTriggerQueueName)] PocMessage message,
+        FunctionContext functionContext,
         [DurableClient] DurableClientContext durableClientContext)
     {
-        var logger = executionContext.GetLogger(nameof(PocServiceBusTriggerAsync));
+        var logger = functionContext.GetLogger(nameof(PocServiceBusTriggerAsync));
         logger.LogInformation("Received message {Message}", message);
 
         await Task.Delay(message.Seconds);

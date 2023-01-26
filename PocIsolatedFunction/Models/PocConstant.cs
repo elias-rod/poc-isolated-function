@@ -3,4 +3,5 @@
     public const string SentinelKey = "Sentinel";
     public const string AppConfigWildcard = "*";
     public const string Prefix = "Pocif";
+    public const string ServiceBusTriggerQueueName = "%ServiceBusQueueName%";
 }

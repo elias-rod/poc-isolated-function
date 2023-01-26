@@ -23,56 +23,56 @@ class PocOrchestration
     }
 
     [Function(nameof(PocOrchestrationAsync))]
-    public async Task<string> PocOrchestrationAsync([OrchestrationTrigger] TaskOrchestrationContext context, FunctionContext executionContext)
-    {
-        var cosmosDocId = await context.CallActivityAsync<string>(nameof(PocCosmosActivityAsync), context.InstanceId);
-        await context.CallActivityAsync(nameof(PocServiceBusActivityAsync), context.InstanceId);
-        await context.WaitForExternalEvent<string>("ExternalEventAlert");
+    public async Task<string> PocOrchestrationAsync([OrchestrationTrigger] TaskOrchestrationContext taskOrchestrationContext, FunctionContext functionContext)
+    {taskOrchestrationContext.ca
+        var cosmosDocId = await taskOrchestrationContext.CallActivityAsync<string>(nameof(PocCosmosActivityAsync), taskOrchestrationContext.InstanceId);
+        await taskOrchestrationContext.CallActivityAsync(nameof(PocServiceBusActivityAsync), taskOrchestrationContext.InstanceId);
+        await taskOrchestrationContext.WaitForExternalEvent<string>("ExternalEventAlert");
         
-        var durableLogger = context.CreateReplaySafeLogger(executionContext.GetLogger(nameof(PocOrchestrationAsync))); //This is going to change in the nuget future realease to be just context.CreateReplaySafeLogger()
-        durableLogger.LogInformation("Woked orchestration {InstanceId}", context.InstanceId);
+        var durableLogger = taskOrchestrationContext.CreateReplaySafeLogger(functionContext.GetLogger(nameof(PocOrchestrationAsync))); //This is going to change in the nuget future realease to be just context.CreateReplaySafeLogger()
+        durableLogger.LogInformation("Woked orchestration {InstanceId}", taskOrchestrationContext.InstanceId);
 
-        await context.CallActivityAsync(
+        await taskOrchestrationContext.CallActivityAsync(
             nameof(PocEventGridActivityAsync),
-            new PocEventGridCommand { InstanceId = context.InstanceId, PocCosmosDocumentId = cosmosDocId }
+            new PocEventGridCommand { InstanceId = taskOrchestrationContext.InstanceId, PocCosmosDocumentId = cosmosDocId }
         );
 
-        durableLogger.LogInformation("Finished orchestration {InstanceId}", context.InstanceId);
+        durableLogger.LogInformation("Finished orchestration {InstanceId}", taskOrchestrationContext.InstanceId);
 
         return cosmosDocId;
     }
 
     [Function(nameof(PocCosmosActivityAsync))]
-    public async Task<string> PocCosmosActivityAsync([ActivityTrigger] string instanceId, FunctionContext executionContext)
+    public async Task<string> PocCosmosActivityAsync([ActivityTrigger] string instanceId, FunctionContext functionContext)
     {
         var container = _cosmosClient.GetContainer(_pocConfig.CosmosDatabaseId, _pocConfig.CosmosContainerId);
         var cosmosDocId = Guid.NewGuid().ToString();
         await container.CreateItemAsync(new PocDocument(cosmosDocId, Random.Shared.Next().ToString()), new PartitionKey(cosmosDocId));
 
-        var logger = executionContext.GetLogger(nameof(PocCosmosActivityAsync));
+        var logger = functionContext.GetLogger(nameof(PocCosmosActivityAsync));
         logger.LogInformation("Document {CosmosDocId} saved in Cosmos for orchestration {InstanceId}", cosmosDocId, instanceId);
 
         return cosmosDocId;
     }
 
     [Function(nameof(PocServiceBusActivityAsync))]
-    public async Task PocServiceBusActivityAsync([ActivityTrigger] string instanceId, FunctionContext executionContext)
+    public async Task PocServiceBusActivityAsync([ActivityTrigger] string instanceId, FunctionContext functionContext)
     {
         await using var sender = _serviceBusClient.CreateSender(_pocConfig.ServiceBusQueueName);
         var message = new PocMessage(instanceId, _pocConfig.MessageDelayInSeconds);
         await sender.SendMessageAsync(new ServiceBusMessage(JsonSerializer.Serialize(message)));
 
-        var logger = executionContext.GetLogger(nameof(PocServiceBusActivityAsync));
+        var logger = functionContext.GetLogger(nameof(PocServiceBusActivityAsync));
         logger.LogInformation("Message queued in ServiceBus for orchestration {InstanceId}", instanceId);
     }
 
     [Function(nameof(PocEventGridActivityAsync))]
-    public async Task PocEventGridActivityAsync([ActivityTrigger] PocEventGridCommand command, FunctionContext executionContext)
+    public async Task PocEventGridActivityAsync([ActivityTrigger] PocEventGridCommand command, FunctionContext functionContext)
     {
         var eventGridEvent = new EventGridEvent(nameof(PocEvent), nameof(PocEvent), "1.0", new PocEvent(command.InstanceId, command.PocCosmosDocumentId));
         await _eventGridPublisherClient.SendEventAsync(eventGridEvent);
 
-        var logger = executionContext.GetLogger(nameof(PocEventGridActivityAsync));
+        var logger = functionContext.GetLogger(nameof(PocEventGridActivityAsync));
         logger.LogInformation("Event published to EventGrid for orchestration {InstanceId}", command.InstanceId);
     }
 }
