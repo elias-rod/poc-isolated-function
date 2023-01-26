@@ -16,15 +16,16 @@ class PocAppConfigTrigger
     [Function(nameof(PocAppConfigTriggerAsync))]
     public async Task PocAppConfigTriggerAsync(
         [EventGridTrigger] EventGridEvent eventGridEvent,
-        FunctionContext executionContext)
+        FunctionContext executionContext,
+        CancellationToken cancellationToken)
     {
         var logger = executionContext.GetLogger(nameof(PocAppConfigTriggerAsync));
         logger.LogInformation("Received Azure AppConfiguration event {EventData}", eventGridEvent.Data);
 
         eventGridEvent.TryCreatePushNotification(out PushNotification pushNotification);
         _configurationRefresher.ProcessPushNotification(pushNotification, TimeSpan.Zero);
-        await _configurationRefresher.RefreshAsync();
+        await _configurationRefresher.RefreshAsync(cancellationToken);
 
-        logger.LogInformation("Azure AppConfiguration keys refreshed triggered by {ResourceUri}", pushNotification.ResourceUri);
+        logger.LogInformation("Azure AppConfiguration keys refresh triggered by {ResourceUri}", pushNotification.ResourceUri);
     }
 }
