@@ -24,7 +24,7 @@ class PocOrchestration
 
     [Function(nameof(PocOrchestrationAsync))]
     public async Task<string> PocOrchestrationAsync([OrchestrationTrigger] TaskOrchestrationContext taskOrchestrationContext, FunctionContext functionContext)
-    {taskOrchestrationContext.ca
+    {
         var cosmosDocId = await taskOrchestrationContext.CallActivityAsync<string>(nameof(PocCosmosActivityAsync), taskOrchestrationContext.InstanceId);
         await taskOrchestrationContext.CallActivityAsync(nameof(PocServiceBusActivityAsync), taskOrchestrationContext.InstanceId);
         await taskOrchestrationContext.WaitForExternalEvent<string>("ExternalEventAlert");
