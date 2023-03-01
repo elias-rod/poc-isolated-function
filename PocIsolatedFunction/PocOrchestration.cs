@@ -31,7 +31,6 @@ class PocOrchestration
         
         var durableLogger = taskOrchestrationContext.CreateReplaySafeLogger(functionContext.GetLogger(nameof(PocOrchestrationAsync))); //This is going to change in the nuget future realease to be just context.CreateReplaySafeLogger()
         durableLogger.LogInformation("Woked orchestration {InstanceId}", taskOrchestrationContext.InstanceId);
-        durableLogger.LogInformation("Setting is {Value}", _pocConfig.MessageDelayInSeconds);
 
         await taskOrchestrationContext.CallActivityAsync(
             nameof(PocEventGridActivityAsync),
