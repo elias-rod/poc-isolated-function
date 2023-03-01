@@ -1,0 +1,26 @@
+trigger:
+  - none
+jobs:
+  - deployment: AzureFunction
+    displayName: Deploy Azure Function
+    environment: Dev
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: Download function artifact
+            inputs:
+              buildType: specific
+              project: poc-isolated-function-project
+              definition: pocif-function-CI
+              buildVersionToDownload: latest
+              targetPath: $(Pipeline.Workspace)
+          - task: AzureFunctionApp@2
+            displayName: Deploy into Azure
+            inputs:
+              azureSubscription: Resource Manager in Free Trial subscription
+              appType: functionApp
+              appName: func-pocif-dev-wus2-1
+              package: $(Pipeline.Workspace)/function_artifact/publish_output.zip
+              deploymentMethod: runFromPackage

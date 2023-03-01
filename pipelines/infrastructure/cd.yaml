@@ -1,0 +1,113 @@
+trigger: none
+parameters:
+  - name: TerraformDestroyParam
+    displayName: Terraform Destroy
+    type: boolean
+    default: false
+variables:
+  - group: PocifVariableGroup
+stages:
+  - stage: TerraformPlanStage
+    displayName: Terraform plan stage
+    variables:
+      TerraformPath: $(System.DefaultWorkingDirectory)/pipelines/infrastructure
+    jobs:
+      - job: TerraformPlanJob
+        displayName: Terraform plan job
+        steps:
+        - task: TerraformCLI@0
+          displayName: Terraform init
+          inputs:
+            command: init
+            workingDirectory: $(TerraformPath)
+            commandOptions: -input=false
+            backendType: azurerm
+            backendServiceArm: $(SERVICE_CONNECTION)
+            ensureBackend: true
+            backendAzureRmResourceGroupName: $(TF_VAR_BACKEND_AZURERM_RESOURCEGROUP_NAME)
+            backendAzureRmResourceGroupLocation: $(TF_VAR_BACKEND_AZURERM_RESOURCEGROUP_LOCATION)
+            backendAzureRmStorageAccountName: $(TF_VAR_BACKEND_AZURERM_STORAGE_ACCOUNT_NAME)
+            backendAzureRmContainerName: $(TF_VAR_BACKEND_AZURERM_CONTAINER_NAME)
+            backendAzureRmKey: $(TF_VAR_BACKEND_AZURERM_KEY)
+        - task: TerraformCLI@0
+          displayName: Terraform plan
+          inputs:
+            command: plan
+            workingDirectory: $(TerraformPath)
+            environmentServiceName: $(SERVICE_CONNECTION)
+            commandOptions: -input=false -out=expected.tfplan
+            publishPlanResults: expected
+        - task: PublishPipelineArtifact@1
+          displayName: Publish Terraform plan artifact
+          condition: eq(variables['TERRAFORM_PLAN_HAS_CHANGES'], true)
+          inputs:
+            targetPath: $(TerraformPath)/expected.tfplan
+            artifact: TerraformPlanArtifact
+            publishLocation: pipeline
+        - script: echo '##vso[task.setvariable variable=TERRAFORM_PLAN_HAS_CHANGES;isOutput=true]$(TERRAFORM_PLAN_HAS_CHANGES)'
+          name: ExportVariablesTask
+          displayName: Export TERRAFORM_PLAN_HAS_CHANGES variable
+  - stage: TerraformApplyStage
+    displayName: Terraform apply stage
+    dependsOn: TerraformPlanStage
+    condition: eq(dependencies.TerraformPlanStage.outputs['TerraformPlanJob.ExportVariablesTask.TERRAFORM_PLAN_HAS_CHANGES'], true)
+    variables:
+      ArtifactPath: $(Pipeline.Workspace)/TerraformPlanArtifact
+      TerraformPath: $(System.DefaultWorkingDirectory)/pipelines/infrastructure
+    jobs:
+      - deployment: TerraformApplyDeployment
+        displayName: Terraform apply deployment
+        environment: Dev
+        strategy:
+         runOnce:
+          deploy:
+            steps:
+            - checkout: self
+              displayName: Git clone
+              persistCredentials: true
+            - download: current
+              displayName: Download Terraform plan artifact
+              artifact: TerraformPlanArtifact
+            - task: TerraformCLI@0
+              displayName: Terraform init
+              inputs:
+                command: init
+                workingDirectory: $(TerraformPath)
+                commandOptions: -input=false
+                backendType: azurerm
+                backendServiceArm: $(SERVICE_CONNECTION)
+                backendAzureRmResourceGroupName: $(TF_VAR_BACKEND_AZURERM_RESOURCEGROUP_NAME)
+                backendAzureRmResourceGroupLocation: $(TF_VAR_BACKEND_AZURERM_RESOURCEGROUP_LOCATION)
+                backendAzureRmStorageAccountName: $(TF_VAR_BACKEND_AZURERM_STORAGE_ACCOUNT_NAME)
+                backendAzureRmContainerName: $(TF_VAR_BACKEND_AZURERM_CONTAINER_NAME)
+                backendAzureRmKey: $(TF_VAR_BACKEND_AZURERM_KEY)
+            - task: TerraformCLI@0
+              displayName: Terraform plan
+              inputs:
+                command: plan
+                workingDirectory: $(TerraformPath)
+                environmentServiceName: $(SERVICE_CONNECTION)
+                commandOptions: -input=false -out=actual.tfplan
+                publishPlanResults: actual
+            - script: |
+                terraform show -json $(ArtifactPath)/expected.tfplan | jq .resource_changes[] > expected.json
+                terraform show -json actual.tfplan | jq .resource_changes[] > actual.json
+                git diff --no-index expected.json actual.json || exit 1
+              displayName: Compare Terraform plans
+              workingDirectory: $(TerraformPath)
+            - task: TerraformCLI@0
+              displayName: Terraform apply
+              inputs:
+                workingDirectory: $(TerraformPath)
+                command: apply
+                environmentServiceName: $(SERVICE_CONNECTION)
+                commandOptions: -input=false actual.tfplan
+            - script: |
+                git config --global user.email infrastructure@pipeline.com
+                git config --global user.name "Infrastructure Pipeline"
+                git checkout -b master
+                git add .terraform.lock.hcl
+                git commit -m "Updated .terraform.lock.hcl due to successful Terraform apply"
+                git push --set-upstream origin master
+              displayName: Commit .terraform.lock.hcl
+              workingDirectory: $(TerraformPath)

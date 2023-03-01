@@ -1,0 +1,16 @@
+trigger: none
+steps:
+- script: |
+    dotnet restore
+    dotnet build --configuration Release
+- task: DotNetCoreCLI@2
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: '**/*.csproj'
+    arguments: --configuration Release --output publish_output
+    modifyOutputPath: false
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: $(System.DefaultWorkingDirectory)/publish_output
+    artifactName: function_artifact
